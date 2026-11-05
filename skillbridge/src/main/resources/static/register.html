@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Registration | SkillBridge AI</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #5145cd, #8678f9);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0;
+        }
+
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            width: 380px;
+            max-width: 92%;
+            box-shadow: 0 10px 30px #3333;
+        }
+
+        h2 {
+            text-align: center;
+            color: #5145cd;
+        }
+
+        p {
+            text-align: center;
+            color: #666;
+        }
+
+        input {
+            width: 100%;
+            padding: 13px;
+            margin-top: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            margin-top: 20px;
+            background: #5145cd;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        a {
+            color: #5145cd;
+            text-decoration: none;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+    <h2>🎓 SkillBridge AI</h2>
+    <p>Create Your Student Account</p>
+
+    <form id="registrationForm">
+        <input type="text" id="name"
+               placeholder="Full Name" required>
+
+        <input type="email" id="email"
+               placeholder="Email Address" required>
+
+        <input type="password" id="password"
+               placeholder="Create Password"
+               minlength="8" required>
+
+        <button type="submit">Create Account</button>
+    </form>
+
+    <p id="message" role="status"></p>
+
+    <p>Already have an account? <a href="login.html">Login</a></p>
+    <p><a href="index.html">← Back to Home</a></p>
+</div>
+
+
+<script>
+document.getElementById("registrationForm")
+    .addEventListener("submit", async function(event) {
+
+        event.preventDefault();
+
+        const name = document.getElementById("name").value.trim();
+        const email = document.getElementById("email").value.trim();
+        const password = document.getElementById("password").value;
+
+        const message = document.getElementById("message");
+        const button = document.querySelector('button[type="submit"]');
+
+        button.disabled = true;
+        message.textContent = "Creating your account...";
+
+        try {
+            const response = await fetch("/api/auth/register", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    name: name,
+                    email: email,
+                    password: password
+                })
+            });
+
+            const data = await response.json();
+
+            message.textContent = data.message;
+
+            if (response.ok) {
+                message.style.color = "green";
+                document.getElementById("registrationForm").reset();
+            } else {
+                message.style.color = "red";
+            }
+
+        } catch (error) {
+            message.style.color = "red";
+            message.textContent =
+                "Server connection failed. Please try again.";
+            console.error(error);
+
+        } finally {
+            button.disabled = false;
+        }
+    });
+</script>
+
+</body>
+</html>

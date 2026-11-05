@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Profile | SkillBridge AI</title>
+
+<style>
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #f5f6ff;
+    color: #29244f;
+}
+
+nav {
+    background: white;
+    padding: 20px 8%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 10px #ddd;
+}
+
+.logo {
+    color: #5145cd;
+    font-size: 24px;
+    font-weight: bold;
+}
+
+nav a {
+    color: #5145cd;
+    text-decoration: none;
+}
+
+.container {
+    max-width: 750px;
+    margin: 45px auto;
+    padding: 20px;
+}
+
+.card {
+    background: white;
+    padding: 35px;
+    border-radius: 18px;
+    box-shadow: 0 5px 25px #ddd8;
+}
+
+h1 { color: #5145cd; }
+
+label {
+    display: block;
+    margin-top: 18px;
+    font-weight: bold;
+}
+
+input, select {
+    width: 100%;
+    padding: 13px;
+    margin-top: 8px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 15px;
+}
+
+button {
+    width: 100%;
+    margin-top: 25px;
+    padding: 14px;
+    background: #5145cd;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+button:hover { background: #4035ad; }
+button:disabled { opacity: 0.6; }
+
+#message {
+    text-align: center;
+    margin-top: 15px;
+}
+</style>
+</head>
+
+<body>
+
+<nav>
+    <div class="logo">🎓 SkillBridge AI</div>
+    <a href="dashboard.html">← Back to Dashboard</a>
+</nav>
+
+<div class="container">
+    <div class="card">
+
+        <h1>👩‍🎓 My Student Profile</h1>
+        <p>Complete your profile to discover better career opportunities.</p>
+
+        <form id="profileForm">
+
+            <label>College Name</label>
+            <input type="text" id="college"
+                   placeholder="Enter your college name" required>
+
+            <label>Branch</label>
+            <input type="text" id="branch"
+                   placeholder="Example: Computer Science" required>
+
+            <label>Academic Year</label>
+            <select id="academicYear" required>
+                <option value="">Select Year</option>
+                <option>1st Year</option>
+                <option>2nd Year</option>
+                <option>3rd Year</option>
+                <option>4th Year</option>
+            </select>
+
+            <label>Technical Skills</label>
+            <input type="text" id="skills"
+                   placeholder="Java, Python, SQL, HTML" required>
+
+            <label>Career Goal</label>
+            <input type="text" id="careerGoal"
+                   placeholder="Example: Software Developer" required>
+
+            <button type="submit" id="saveButton">
+                Save Profile
+            </button>
+
+        </form>
+
+        <p id="message" role="status"></p>
+
+    </div>
+</div>
+
+<script>
+async function loadProfile() {
+    try {
+        const response = await fetch("/api/profile");
+
+        if (response.status === 401) {
+            window.location.href = "login.html";
+            return;
+        }
+
+        if (!response.ok) {
+            throw new Error("Could not load profile");
+        }
+
+        const profile = await response.json();
+
+        document.getElementById("college").value = profile.college || "";
+        document.getElementById("branch").value = profile.branch || "";
+        document.getElementById("academicYear").value =
+            profile.academicYear || "";
+        document.getElementById("skills").value = profile.skills || "";
+        document.getElementById("careerGoal").value =
+            profile.careerGoal || "";
+
+    } catch (error) {
+        document.getElementById("message").textContent =
+            "Unable to load profile.";
+        console.error(error);
+    }
+}
+
+document.getElementById("profileForm")
+    .addEventListener("submit", async function(event) {
+
+        event.preventDefault();
+
+        const button = document.getElementById("saveButton");
+        const message = document.getElementById("message");
+
+        const profile = {
+            college: document.getElementById("college").value,
+            branch: document.getElementById("branch").value,
+            academicYear: document.getElementById("academicYear").value,
+            skills: document.getElementById("skills").value,
+            careerGoal: document.getElementById("careerGoal").value
+        };
+
+        button.disabled = true;
+        message.textContent = "Saving profile...";
+
+        try {
+            const response = await fetch("/api/profile", {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(profile)
+            });
+
+            if (response.status === 401) {
+                window.location.href = "login.html";
+                return;
+            }
+
+            const data = await response.json();
+
+            message.style.color = response.ok ? "green" : "red";
+            message.textContent = data.message || "Something went wrong.";
+
+        } catch (error) {
+            message.style.color = "red";
+            message.textContent = "Unable to connect to server.";
+            console.error(error);
+        } finally {
+            button.disabled = false;
+        }
+    });
+
+loadProfile();
+</script>
+
+</body>
+</html>

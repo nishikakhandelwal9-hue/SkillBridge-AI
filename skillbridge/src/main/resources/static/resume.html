@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Resume Analyzer | SkillBridge AI</title>
+
+<style>
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #f5f3ff;
+    color: #29244f;
+}
+
+nav {
+    background: white;
+    padding: 20px 8%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 10px #ddd;
+}
+
+.logo {
+    color: #5145cd;
+    font-size: 24px;
+    font-weight: bold;
+}
+
+nav a {
+    text-decoration: none;
+    color: #5145cd;
+    font-weight: bold;
+}
+
+.container {
+    max-width: 950px;
+    margin: 40px auto;
+    padding: 20px;
+}
+
+.card {
+    background: white;
+    padding: 30px;
+    border-radius: 16px;
+    margin-bottom: 25px;
+    box-shadow: 0 4px 18px #ddd8;
+}
+
+h1, h2 { color: #5145cd; }
+
+input[type="file"] {
+    display: block;
+    width: 100%;
+    margin: 20px 0;
+    padding: 15px;
+    border: 2px dashed #aaa3ed;
+    border-radius: 10px;
+}
+
+button {
+    background: #5145cd;
+    color: white;
+    padding: 14px 25px;
+    border: none;
+    border-radius: 9px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+button:disabled { opacity: 0.6; }
+
+.skill {
+    display: inline-block;
+    padding: 8px 14px;
+    margin: 5px;
+    background: #ede9fe;
+    color: #5145cd;
+    border-radius: 20px;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 18px;
+}
+
+.result-card {
+    background: #f8f7ff;
+    padding: 20px;
+    border: 1px solid #ddd6fe;
+    border-radius: 12px;
+}
+
+.progress {
+    height: 12px;
+    background: #e5e7eb;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.progress-bar {
+    height: 100%;
+    background: #5145cd;
+}
+
+#message { margin-top: 15px; }
+</style>
+</head>
+
+<body>
+
+<nav>
+    <div class="logo">🎓 SkillBridge AI</div>
+    <a href="dashboard.html">← Back to Dashboard</a>
+</nav>
+
+<div class="container">
+
+    <div class="card">
+        <h1>📄 Smart Resume Analyzer</h1>
+        <p>Upload your PDF resume to discover your technical skills and internship matches.</p>
+
+        <form id="resumeForm">
+            <input type="file" id="resumeFile" accept=".pdf,application/pdf" required>
+
+            <button type="submit" id="analyzeButton">
+                🔍 Analyze My Resume
+            </button>
+        </form>
+
+        <p id="message" role="status"></p>
+    </div>
+
+    <div class="card" id="resultsSection" hidden>
+        <h2>🎯 Detected Skills</h2>
+        <div id="skillsList"></div>
+
+        <h2>💼 Internship Matches</h2>
+        <div class="grid" id="internshipResults"></div>
+    </div>
+
+</div>
+
+<script>
+document.getElementById("resumeForm").addEventListener("submit", async function(event) {
+    event.preventDefault();
+
+    const file = document.getElementById("resumeFile").files[0];
+    const message = document.getElementById("message");
+    const button = document.getElementById("analyzeButton");
+    const resultsSection = document.getElementById("resultsSection");
+
+    if (!file) {
+        message.textContent = "Please select a PDF resume.";
+        return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+        message.textContent = "PDF must be smaller than 5 MB.";
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    button.disabled = true;
+    message.textContent = "Analyzing your resume...";
+    resultsSection.hidden = true;
+
+    try {
+        const response = await fetch("/api/resume/analyze", {
+            method: "POST",
+            body: formData
+        });
+
+        if (response.status === 401) {
+            window.location.href = "login.html";
+            return;
+        }
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            message.textContent = data.message || "Resume analysis failed.";
+            return;
+        }
+
+        message.textContent = data.message;
+
+        const skillsList = document.getElementById("skillsList");
+        const internshipResults = document.getElementById("internshipResults");
+
+        skillsList.replaceChildren();
+        internshipResults.replaceChildren();
+
+        if (data.detectedSkills.length === 0) {
+            skillsList.textContent = "No supported technical skills detected.";
+        }
+
+        data.detectedSkills.forEach(skill => {
+            const span = document.createElement("span");
+            span.className = "skill";
+            span.textContent = skill;
+            skillsList.appendChild(span);
+        });
+
+        data.recommendations.forEach(internship => {
+            const card = document.createElement("div");
+            card.className = "result-card";
+
+            const title = document.createElement("h3");
+            title.textContent = internship.role;
+
+            const percentage = document.createElement("p");
+            percentage.textContent = "Match: " + internship.matchPercentage + "%";
+
+            const progress = document.createElement("div");
+            progress.className = "progress";
+
+            const progressBar = document.createElement("div");
+            progressBar.className = "progress-bar";
+            progressBar.style.width = internship.matchPercentage + "%";
+
+            progress.appendChild(progressBar);
+
+            const missing = document.createElement("p");
+            missing.textContent = "Skills to Learn: " +
+                (internship.missingSkills.length
+                    ? internship.missingSkills.join(", ")
+                    : "None");
+
+            card.appendChild(title);
+            card.appendChild(percentage);
+            card.appendChild(progress);
+            card.appendChild(missing);
+
+            internshipResults.appendChild(card);
+        });
+
+        resultsSection.hidden = false;
+
+    } catch (error) {
+        message.textContent = "Unable to connect to the server.";
+        console.error(error);
+    } finally {
+        button.disabled = false;
+    }
+});
+</script>
+
+</body>
+</html>

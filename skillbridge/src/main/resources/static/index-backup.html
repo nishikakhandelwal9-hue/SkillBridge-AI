@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>SkillBridge AI</title>
+
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background: #f5f7ff;
+}
+
+nav {
+    background: #ffffff;
+    padding: 22px 8%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 10px #ddd;
+}
+
+.logo {
+    color: #5145cd;
+    font-size: 26px;
+    font-weight: bold;
+}
+
+nav a {
+    text-decoration: none;
+    color: #333;
+    margin-left: 25px;
+    font-weight: 500;
+}
+
+.hero {
+    text-align: center;
+    padding: 110px 20px;
+    background: linear-gradient(135deg, #5145cd, #8678f9);
+    color: white;
+}
+
+.hero h1 {
+    font-size: 48px;
+    margin-bottom: 20px;
+}
+
+.hero p {
+    font-size: 19px;
+    margin-bottom: 30px;
+}
+
+button {
+    padding: 14px 30px;
+    border: none;
+    background: white;
+    color: #5145cd;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.features {
+    padding: 70px 8%;
+    text-align: center;
+}
+
+.features h2 {
+    font-size: 32px;
+    margin-bottom: 40px;
+}
+
+.cards {
+    display: flex;
+    gap: 25px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.card {
+    background: white;
+    padding: 35px;
+    width: 280px;
+    border-radius: 15px;
+    box-shadow: 0 5px 20px #ddd;
+}
+
+.card h3 {
+    color: #5145cd;
+    margin-bottom: 15px;
+}
+
+footer {
+    text-align: center;
+    padding: 25px;
+    background: #29244f;
+    color: white;
+}
+</style>
+</head>
+<body>
+
+
+<script>
+async function findInternships() {
+
+    const skills = document.getElementById("studentSkills").value.trim();
+
+    if (!skills) {
+        alert("Please enter your skills!");
+        return;
+    }
+
+    const results = document.getElementById("results");
+
+    results.textContent = "Finding internships...";
+
+    try {
+        const response = await fetch(
+            "/api/internships?skills=" + encodeURIComponent(skills)
+        );
+
+        if (!response.ok) {
+            throw new Error("Server error: " + response.status);
+        }
+
+        const internships = await response.json();
+
+        results.innerHTML = "";
+
+        internships.forEach(internship => {
+
+            const card = document.createElement("div");
+
+            card.style.cssText = `
+                background:white;
+                padding:25px;
+                width:300px;
+                border-radius:15px;
+                box-shadow:0 5px 20px #ddd;
+                text-align:left;
+            `;
+
+            const title = document.createElement("h3");
+            title.textContent = internship.role;
+            title.style.color = "#5145cd";
+
+            const percentage = document.createElement("p");
+            percentage.textContent =
+                "Match: " + internship.matchPercentage + "%";
+            percentage.style.margin = "15px 0";
+            percentage.style.fontWeight = "bold";
+
+            const progress = document.createElement("div");
+            progress.style.cssText =
+                "height:10px;background:#e5e7eb;border-radius:10px;overflow:hidden;";
+
+            const progressFill = document.createElement("div");
+            progressFill.style.cssText =
+                "height:100%;background:#5145cd;border-radius:10px;";
+            progressFill.style.width =
+                internship.matchPercentage + "%";
+
+            progress.appendChild(progressFill);
+
+            const required = document.createElement("p");
+            required.style.marginTop = "15px";
+            required.textContent =
+                "Required Skills: " + internship.requiredSkills;
+
+            const missing = document.createElement("p");
+            missing.style.marginTop = "10px";
+            missing.textContent =
+                "Missing Skills: " +
+                (internship.missingSkills.length
+                    ? internship.missingSkills.join(", ")
+                    : "None 🎉");
+
+            card.append(title, percentage, progress, required, missing);
+            results.appendChild(card);
+        });
+
+    } catch (error) {
+        results.textContent =
+            "Unable to load recommendations. Check your Java server.";
+        console.error(error);
+    }
+}
+</script>
+    
+
+<nav>
+    <div class="logo">SkillBridge AI</div>
+
+    <div>
+        <a href="#home">Home</a>
+        <a href="#features">Features</a>
+        <a href="#recommendations">Internships</a>
+        <a href="#features">Dashboard</a>
+    </div>
+</nav>
+
+<section class="hero" id="home">
+
+    <h1>Build Your Future With SkillBridge AI</h1>
+
+    <p>
+        Discover internships, analyze your skills,
+        and unlock your career potential.
+    </p>
+
+    <button onclick="document.getElementById('features').scrollIntoView({behavior:'smooth'})">
+        Get Started
+    </button>
+
+</section>
+
+<section class="features" id="features">
+
+    <h2>Our Smart Features</h2>
+
+    <div class="cards">
+
+        <div class="card">
+            <h3>🎯 Internship Matching</h3>
+            <p>
+                Discover internships matching your skills
+                and career interests.
+            </p>
+        </div>
+
+        <div class="card">
+            <h3>📊 Skill Analysis</h3>
+            <p>
+                Identify your strengths and discover
+                skills you need to improve.
+            </p>
+        </div>
+
+        <div class="card">
+            <h3>📄 Resume Analyzer</h3>
+            <p>
+                Analyze your resume and receive
+                career improvement suggestions.
+            </p>
+        </div>
+
+        <div class="card">
+            <h3>🚀 Career Roadmap</h3>
+            <p>
+                Follow a personalized learning roadmap
+                to achieve your career goals.
+            </p>
+        </div>
+
+    </div>
+
+</section>
+
+
+
+<section id="recommendations" style="padding:60px 8%;background:#eef1ff;text-align:center;">
+
+   <h2 style="font-size:32px;margin-bottom:15px;">
+    🎯 Find Your Perfect Internship
+</h2>
+
+    <p style="margin-bottom:30px;color:#555;">
+        Enter your technical skills to discover matching internships.
+    </p>
+
+    <input
+        type="text"
+        id="studentSkills"
+        placeholder="Example: Java, SQL, HTML, Python"
+        style="padding:15px;width:60%;max-width:550px;border:1px solid #ccc;border-radius:8px;font-size:16px;"
+    >
+
+    <br><br>
+
+    <button onclick="findInternships()"
+        style="background:#5145cd;color:white;padding:15px 35px;">
+        Find My Internships
+    </button>
+
+    <div id="results" style="margin-top:40px;display:flex;gap:20px;flex-wrap:wrap;justify-content:center;"></div>
+
+</section>
+
+<footer>
+    © 2026 SkillBridge AI | Smart Career Platform
+</footer>
+
+</body>
+</html>

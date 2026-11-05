@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Career Roadmap | SkillBridge AI</title>
+
+<style>
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #f5f3ff;
+    color: #292444;
+}
+
+header {
+    background: linear-gradient(135deg, #5145cd, #8b5cf6);
+    color: white;
+    text-align: center;
+    padding: 35px 20px;
+}
+
+.container {
+    max-width: 850px;
+    margin: 35px auto;
+    padding: 15px;
+}
+
+.card {
+    background: white;
+    padding: 25px;
+    border-radius: 15px;
+    margin-bottom: 22px;
+    box-shadow: 0 5px 18px rgba(0,0,0,0.08);
+}
+
+.progress-bg {
+    background: #e5e7eb;
+    height: 22px;
+    border-radius: 20px;
+    overflow: hidden;
+}
+
+.progress-bar {
+    background: linear-gradient(90deg, #5145cd, #a78bfa);
+    height: 100%;
+    width: 0%;
+    transition: width 0.5s;
+}
+
+.step {
+    background: #f8f7ff;
+    padding: 18px;
+    margin: 14px 0;
+    border-left: 5px solid #5145cd;
+    border-radius: 10px;
+}
+
+.completed {
+    border-left-color: #16a34a;
+}
+
+.btn {
+    display: inline-block;
+    background: #5145cd;
+    color: white;
+    padding: 13px 20px;
+    border-radius: 8px;
+    text-decoration: none;
+    margin-top: 12px;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <h1>🚀 Personalized Career Roadmap</h1>
+    <p>Build your future, one skill at a time!</p>
+</header>
+
+<div class="container">
+
+    <div class="card">
+        <h2>🎯 Your Career Goal</h2>
+        <h3 id="careerGoal">Loading...</h3>
+    </div>
+
+    <div class="card">
+        <h2>📊 Your Learning Progress</h2>
+        <h2 id="progressText">0%</h2>
+
+        <div class="progress-bg">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+
+        <p>Based on the skills listed in your profile.</p>
+    </div>
+
+    <div class="card">
+        <h2>🗺️ Your Learning Roadmap</h2>
+        <div id="roadmapSteps">Loading roadmap...</div>
+    </div>
+
+    <a href="dashboard.html" class="btn">
+        ← Back to Dashboard
+    </a>
+
+</div>
+
+<script>
+async function loadRoadmap() {
+    const goal = document.getElementById("careerGoal");
+    const steps = document.getElementById("roadmapSteps");
+
+    try {
+        const response = await fetch("/api/roadmap", {
+            credentials: "same-origin"
+        });
+
+        if (response.status === 401) {
+            window.location.href = "login.html";
+            return;
+        }
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            goal.textContent = "Career goal unavailable";
+            steps.textContent =
+                data.message || "Please update your profile.";
+
+            const link = document.createElement("a");
+            link.href = "profile.html";
+            link.textContent = "Update Profile →";
+
+            steps.appendChild(document.createElement("br"));
+            steps.appendChild(link);
+            return;
+        }
+
+        goal.textContent = data.careerGoal;
+
+        document.getElementById("progressText").textContent =
+            data.progress + "% Completed";
+
+        document.getElementById("progressBar").style.width =
+            data.progress + "%";
+
+        steps.innerHTML = "";
+
+        data.roadmap.forEach(item => {
+            const div = document.createElement("div");
+
+            div.className = item.status === "Completed"
+                ? "step completed"
+                : "step";
+
+            const title = document.createElement("h3");
+            title.textContent =
+                "Step " + item.step + ": " + item.skill;
+
+            const status = document.createElement("p");
+            status.textContent = item.status === "Completed"
+                ? "✅ Already Learned"
+                : "📚 Start Learning";
+
+            div.appendChild(title);
+            div.appendChild(status);
+            steps.appendChild(div);
+        });
+
+    } catch (error) {
+        goal.textContent = "Connection error";
+        steps.textContent =
+            "Unable to connect to the server. Please try again.";
+    }
+}
+
+loadRoadmap();
+</script>
+
+</body>
+</html>
